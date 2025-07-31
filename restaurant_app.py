@@ -1,6 +1,10 @@
 import streamlit as st
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from io import BytesIO
+from datetime import datetime
 
-# ----- USER CREDENTIALS -----
+# ----- LOGIN INFO -----
 USERNAME = "admin"
 PASSWORD = "1234"
 
@@ -27,21 +31,20 @@ def logout():
     st.session_state.logged_in = False
     st.experimental_rerun()
 
-# ----- MAIN APP -----
+# ----- MAIN RESTAURANT APP -----
 def restaurant_app():
     st.sidebar.button("🚪 Logout", on_click=logout)
 
-    # Initialize menu only once
     if 'menu' not in st.session_state:
         st.session_state.menu = {
             "Burger": 120,
             "Pizza": 250,
-            "Pasta": 180,
-            "Fries": 100,
-            "Coke": 40
+            "aloo wada": 180,
+            "Panir masala": 100,
+            "Shev Bhaji": 40
         }
 
-    st.title("🍴 Welcome to Sai Restaurant")
+    st.title("🍴 Sai Restaurant ")
 
     tab1, tab2 = st.tabs(["🧑‍🍳 Customer", "🔐 Admin Panel"])
 
@@ -52,6 +55,7 @@ def restaurant_app():
             st.write(f"**{item}** - ₹{price}")
 
         st.subheader("🛒 Place Your Order")
+
         order = {}
         for item in st.session_state.menu:
             qty = st.number_input(f"{item} (Qty)", min_value=0, max_value=10, step=1, key=item)
@@ -61,12 +65,37 @@ def restaurant_app():
         if st.button("Generate Bill"):
             if order:
                 total = 0
-                st.write("### 🧾 Bill")
+                bill_text = "🧾 BILL Thank You...visit Again\n\n"
                 for item, qty in order.items():
                     price = st.session_state.menu[item] * qty
-                    st.write(f"{item} x {qty} = ₹{price}")
+                    bill_text += f"{item} x {qty} = ₹{price}\n"
                     total += price
-                st.write(f"### ✅ Total: ₹{total}")
+                bill_text += f"\nTOTAL = ₹{total}"
+
+                st.text(bill_text)
+
+                # ---- PDF Generation ----
+                buffer = BytesIO()
+                c = canvas.Canvas(buffer, pagesize=A4)
+                text = c.beginText(50, 800)
+                text.setFont("Helvetica", 12)
+
+                now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                text.textLine(f"🧾 Python Restaurant Bill")
+                text.textLine(f"Date/Time: {now}")
+                text.textLine("------------------------------")
+                for line in bill_text.split('\n'):
+                    text.textLine(line)
+                c.drawText(text)
+                c.save()
+                buffer.seek(0)
+
+                st.download_button(
+                    label="🖨️ Download & Print Bill (PDF)",
+                    data=buffer,
+                    file_name="restaurant_bill.pdf",
+                    mime="application/pdf"
+                )
             else:
                 st.warning("Please select at least one item.")
 
