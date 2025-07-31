@@ -34,7 +34,7 @@ if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 
 # App Title
-st.title("🏦 Harshal Co. Bank")
+st.title("🏦 Tejas Co. Bank")
 st.subheader("Simple & Secure Banking")
 
 # --- Page 1: Create Account ---
