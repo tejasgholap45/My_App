@@ -4,11 +4,18 @@ import os
 
 FILENAME = "tasks.json"
 
-# Load tasks
+# Load tasks safely
 def load_tasks():
     if os.path.exists(FILENAME):
         with open(FILENAME, "r") as f:
-            return json.load(f)
+            try:
+                data = json.load(f)
+                # If old format (list only), convert to new format
+                if isinstance(data, list):
+                    return {"tasks": data, "points": 0}
+                return data
+            except:
+                return {"tasks": [], "points": 0}
     return {"tasks": [], "points": 0}
 
 # Save tasks
@@ -50,7 +57,7 @@ def main():
                 if not task["done"]:
                     if st.button("✅ Done", key=f"done_{i}"):
                         tasks[i]["done"] = True
-                        data["points"] += 5   # give points for completing
+                        data["points"] += 5   # give points
                         save_tasks(data)
                         st.balloons()
                         st.success("Great job! You earned 5 points 🎉")
