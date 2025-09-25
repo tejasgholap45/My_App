@@ -30,7 +30,7 @@ def main():
             tasks.append({"title": new_task, "done": False})
             save_tasks(tasks)
             st.success("Task added!")
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.warning("Task cannot be empty!")
 
@@ -44,12 +44,12 @@ def main():
                 if st.button("✅ Done", key=f"done_{i}"):
                     tasks[i]["done"] = True
                     save_tasks(tasks)
-                    st.experimental_rerun()
+                    st.rerun()
             with col3:
                 if st.button("🗑️ Delete", key=f"delete_{i}"):
                     tasks.pop(i)
                     save_tasks(tasks)
-                    st.experimental_rerun()
+                    st.rerun()
     else:
         st.info("No tasks yet. Add one above!")
 
