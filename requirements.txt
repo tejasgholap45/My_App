@@ -3,3 +3,5 @@ streamlit==1.37.0
 streamlit
 reportlab
 
+streamlit
+fpdf
