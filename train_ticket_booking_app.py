@@ -1,70 +1,48 @@
 import streamlit as st
-from datetime import datetime
-from io import BytesIO
 from fpdf import FPDF
+from io import BytesIO
+from datetime import datetime
 
-st.set_page_config(page_title="🚆 Train Ticket Booking", page_icon="🚆")
-
-# ----- Dummy Train Data -----
-TRAINS = {
-    "Express 101": {"from": "Mumbai", "to": "Pune", "time": "08:00 AM", "price": 200},
-    "Superfast 202": {"from": "Mumbai", "to": "Delhi", "time": "10:30 AM", "price": 1200},
-    "Shatabdi 303": {"from": "Pune", "to": "Nagpur", "time": "06:45 AM", "price": 900},
-    "Intercity 404": {"from": "Delhi", "to": "Jaipur", "time": "03:15 PM", "price": 500},
-}
-
-# ----- PDF Ticket Generator -----
+# PDF generator (simple, no Unicode/emoji)
 def generate_ticket_pdf(name, train, passengers, date):
-    train_info = TRAINS[train]
-
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", "B", 16)
+    pdf.set_font("Arial", "", 14)
 
-    pdf.cell(200, 10, " Train Ticket", ln=True, align="C")
+    pdf.cell(200, 10, txt="Train Ticket", ln=True, align="C")
     pdf.ln(10)
 
-    pdf.set_font("Arial", "", 12)
-    pdf.cell(0, 10, f"Name: {name}", ln=True)
-    pdf.cell(0, 10, f"Train: {train}", ln=True)
-    pdf.cell(0, 10, f"From: {train_info['from']}  To: {train_info['to']}", ln=True)
-    pdf.cell(0, 10, f"Departure: {train_info['time']}  Date: {date}", ln=True)
-    pdf.cell(0, 10, f"Passengers: {passengers}", ln=True)
+    pdf.cell(200, 10, txt=f"Name: {name}", ln=True)
+    pdf.cell(200, 10, txt=f"Train: {train}", ln=True)
+    pdf.cell(200, 10, txt=f"Passengers: {passengers}", ln=True)
+    pdf.cell(200, 10, txt=f"Date of Journey: {date}", ln=True)
 
-    total_price = train_info['price'] * passengers
-    pdf.cell(0, 10, f"Total Fare: ₹{total_price}", ln=True)
-
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     pdf.ln(10)
-    pdf.cell(0, 10, "Booking Confirmed. Have a safe journey!", ln=True)
+    pdf.cell(200, 10, txt=f"Issued On: {now}", ln=True)
 
     buffer = BytesIO()
     pdf.output(buffer)
     buffer.seek(0)
     return buffer
 
+# Streamlit UI
+st.title("Train Ticket Booking App")
 
-# ----- Streamlit UI -----
-st.title("🚆 Train Ticket Booking App")
-st.write("Book your train tickets easily!")
+name = st.text_input("Enter Passenger Name")
+train = st.selectbox("Select Train", ["Express 101", "Superfast 202", "Rajdhani 303"])
+passengers = st.number_input("Number of Passengers", min_value=1, step=1)
+date = st.date_input("Select Journey Date")
 
-with st.form("booking_form"):
-    name = st.text_input("Passenger Name")
-    train = st.selectbox("Select Train", list(TRAINS.keys()))
-    passengers = st.number_input("Number of Passengers", min_value=1, step=1, value=1)
-    date = st.date_input("Select Travel Date", datetime.today())
-
-    submitted = st.form_submit_button("Book Ticket")
-
-if submitted:
+if st.button("Book Ticket"):
     if name.strip() == "":
-        st.error("⚠️ Please enter passenger name")
+        st.error("Please enter passenger name")
     else:
-        st.success("✅ Ticket booked successfully!")
-        pdf_buffer = generate_ticket_pdf(name, train, passengers, date)
-
+        pdf_bytes = generate_ticket_pdf(name, train, passengers, date)
+        st.success("Ticket booked successfully!")
         st.download_button(
-            label="🖨️ Download Ticket (PDF)",
-            data=pdf_buffer,
+            label="Download Ticket (PDF)",
+            data=pdf_bytes,
             file_name="train_ticket.pdf",
             mime="application/pdf"
         )
